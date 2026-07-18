@@ -137,8 +137,8 @@ EOF
 #####################################
 echo ">>> 重启 Xray 服务 ..."
 
-# 检测运行环境：有 systemctl 就用 systemd，否则直接管理进程
-if command -v systemctl >/dev/null 2>&1; then
+# 检测运行环境：systemd 真的在跑（PID 1 是 systemd）才用 systemctl
+if [ "$(ps -p 1 -o comm= 2>/dev/null)" = "systemd" ]; then
     systemctl restart xray
     sleep 2
     systemctl --no-pager status xray
@@ -223,7 +223,7 @@ echo "VLESS 链接 :"
 echo
 echo "$URL"
 echo
-if command -v journalctl >/dev/null 2>&1; then
+if [ "$(ps -p 1 -o comm= 2>/dev/null)" = "systemd" ]; then
     echo "查看日志: journalctl -u xray -f"
 else
     echo "查看日志: tail -f /var/log/xray.log"
