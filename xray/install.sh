@@ -3,7 +3,7 @@ set -e
 
 #####################################
 # Xray + VLESS-REALITY 一键安装脚本
-# 用法: bash <(curl -fsSL https://raw.githubusercontent.com/<你的仓库>/main/install.sh)
+# 用法: bash <(curl -fsSL https://raw.githubusercontent.com/<用户名>/<你的仓库>/main/[路径]/install.sh)
 #####################################
 
 # ---- 可配置项（通过环境变量覆盖）----
