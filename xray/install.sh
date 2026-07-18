@@ -133,12 +133,28 @@ cat >/usr/local/etc/xray/config.json <<EOF
 EOF
 
 #####################################
-# 7. 重启 Xray
+# 7. 重启 Xray（兼容 systemd 与 Docker 无 systemd 环境）
 #####################################
 echo ">>> 重启 Xray 服务 ..."
-systemctl restart xray
-sleep 2
-systemctl --no-pager status xray
+
+# 检测运行环境：有 systemctl 就用 systemd，否则直接管理进程
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl restart xray
+    sleep 2
+    systemctl --no-pager status xray
+else
+    # Docker / 非 systemd 环境：先杀掉旧进程，再后台启动
+    echo "    未检测到 systemctl，使用直接进程管理方式 ..."
+    pkill xray 2>/dev/null || true
+    sleep 1
+    nohup xray run -config /usr/local/etc/xray/config.json > /var/log/xray.log 2>&1 &
+    sleep 2
+    if pgrep -x xray >/dev/null 2>&1; then
+        echo "    xray 进程运行中 (PID: $(pgrep -x xray | head -1))"
+    else
+        echo "    警告: xray 进程启动失败，请检查 /var/log/xray.log"
+    fi
+fi
 
 #####################################
 # 8. 生成 Clash Meta 客户端配置
@@ -207,4 +223,8 @@ echo "VLESS 链接 :"
 echo
 echo "$URL"
 echo
-echo "查看日志: journalctl -u xray -f"
+if command -v journalctl >/dev/null 2>&1; then
+    echo "查看日志: journalctl -u xray -f"
+else
+    echo "查看日志: tail -f /var/log/xray.log"
+fi
